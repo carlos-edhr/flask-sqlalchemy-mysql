@@ -1,5 +1,5 @@
 # Imports
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 
@@ -7,7 +7,7 @@ from flask_marshmallow import Marshmallow
 app = Flask(__name__)
 
 # DB connection
-app.config['SQL_ALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root@localhost/flaskmysql'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:Sonata09X!@localhost/flaskmysql?charset=utf8mb4'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # ORM
@@ -44,8 +44,27 @@ tasks_schema = TaskSchema(many=True)
 @app.route('/tasks', methods=['POST'])
 def create_task():
 
-    print(request.json)
+    title = request.json['title']
+    description = request.json['description']
+
+    new_task = Task(title, description)
+    db.session.add(new_task)
+    db.session.commit()
+
+    return task_schema.jsonify(new_task)
+
     return 'received'
+
+
+@app.route('/tasks', methods=['GET'])
+def get_tasks():
+    all_tasks = Task.query.all()
+    result = tasks_schema.dump(all_tasks)
+    return jsonify(result)
+
+
+@app.route('/tasks/<id>', methods=['GET'])
+def get_task(id):
 
 
 if __name__ == "__main__":
